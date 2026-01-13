@@ -1,0 +1,79 @@
+# 모델별 설정
+# ================================================
+# 각 모델의 토크나이저 및 전처리 특성
+
+models:
+  klue/roberta-base:
+    name: "klue/roberta-base"
+    tokenizer: "klue/roberta-base"
+    tokenizer_type: "sentencepiece"
+    special_tokens:
+      cls: "<s>"
+      sep: "</s>"
+      pad: "<pad>"
+    recommended_lr_range: [2.0e-5, 3.0e-5]
+    max_position_embeddings: 514
+    notes: "한국어 최적화, 안정적인 베이스라인"
+    
+  klue/roberta-large:
+    name: "klue/roberta-large"
+    tokenizer: "klue/roberta-large"
+    tokenizer_type: "sentencepiece"
+    special_tokens:
+      cls: "<s>"
+      sep: "</s>"
+      pad: "<pad>"
+    recommended_lr_range: [1.0e-5, 2.0e-5]
+    max_position_embeddings: 514
+    notes: "더 큰 용량, GPU 메모리 12GB+ 필요"
+    
+  monologg/koelectra-base-v3-discriminator:
+    name: "monologg/koelectra-base-v3-discriminator"
+    tokenizer: "monologg/koelectra-base-v3-discriminator"
+    tokenizer_type: "wordpiece"
+    special_tokens:
+      cls: "[CLS]"
+      sep: "[SEP]"
+      pad: "[PAD]"
+    recommended_lr_range: [3.0e-5, 5.0e-5]
+    max_position_embeddings: 512
+    notes: "ELECTRA 방식, 빠른 수렴"
+    
+  monologg/kobert:
+    name: "monologg/kobert"
+    tokenizer: "monologg/kobert"
+    tokenizer_type: "sentencepiece"
+    special_tokens:
+      cls: "[CLS]"
+      sep: "[SEP]"
+      pad: "[PAD]"
+    recommended_lr_range: [2.0e-5, 3.0e-5]
+    max_position_embeddings: 512
+    trust_remote_code: true
+    notes: "SKT KoBERT, trust_remote_code 필요"
+
+# 토큰 분포 분석 결과 (2024년 분석)
+token_analysis:
+  sample_size: 50000
+  statistics:
+    mean: 62
+    std: 27
+    p50: 58
+    p75: 75
+    p90: 95
+    p95: 112
+    p99: 149
+    max: 677
+  recommended_max_lengths:
+    conservative: 96   # P90 기반
+    balanced: 128      # P95 + 여유
+    aggressive: 160    # P99 + 여유
+
+# 입력 형식 설정
+input_format:
+  # 질문과 응답을 결합하는 방식
+  template: "{question} {sep_token} {response}"
+  # Cross-Encoder용 (Context/Response 분리)
+  cross_encoder:
+    context_template: "{question}"
+    response_template: "{response}"

@@ -1,0 +1,28 @@
+# AI 품질 평가 모델 실험 환경
+# Python 3.10+
+
+# Core ML
+torch>=2.0.0
+transformers>=4.30.0
+datasets>=2.14.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Experiment tracking
+wandb>=0.15.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Tokenizer for KoBERT (optional)
+# kobert-transformers>=0.5.0
+sentencepiece>=0.1.99

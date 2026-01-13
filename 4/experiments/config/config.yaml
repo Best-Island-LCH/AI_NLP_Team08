@@ -1,0 +1,113 @@
+# AI 품질 평가 모델 - 기본 설정
+# ================================================
+
+# 데이터 경로
+data:
+  train_path: "../data/train/training_all_aggregated.csv"
+  val_path: "../data/val/validation_all_aggregated.csv"
+  encoding: "utf-8-sig"
+
+# 평가 기준 (9개)
+criteria:
+  - linguistic_acceptability
+  - consistency
+  - interestingness
+  - unbias
+  - harmlessness
+  - no_hallucination
+  - understandability
+  - sensibleness
+  - specificity
+
+# 모델 설정
+model:
+  name: "klue/roberta-base"
+  num_labels: 9
+  problem_type: "multi_label_classification"
+
+# 토큰화 설정 (토큰 분포 분석 결과 기반)
+tokenizer:
+  max_length: 128  # 기본값, P95=112 기반으로 128 사용
+  padding: "max_length"
+  truncation: true
+
+# 대화 맥락 설정
+context:
+  enabled: false  # 대화 맥락 포함 여부
+  max_prev_turns: 7  # 최대 포함할 이전 턴 수
+  max_length: 512  # 맥락 포함 시 최대 토큰 길이 (평균 266 토큰, 최대 467 토큰)
+
+# 학습 설정
+training:
+  batch_size: 32
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  num_epochs: 5
+  seed: 42
+  gradient_accumulation_steps: 1
+  
+  # Optimizer
+  optim: "adamw_torch"  # adamw_torch, adamw_hf, adafactor, sgd, adagrad, adam
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1.0e-8
+  
+  # Learning Rate Scheduler
+  lr_scheduler_type: "cosine"  # linear, cosine, cosine_with_restarts, polynomial, constant
+  
+  # Gradient Clipping
+  max_grad_norm: 1.0
+  
+  # Mixed Precision
+  precision: "bf16"  # fp16, bf16, fp32 (RTX 3090 Ampere에서 bf16 권장)
+  
+  # 로깅 설정
+  logging_steps: 100
+  
+  # 평가 및 저장 전략
+  eval_strategy: "epoch"  # epoch, steps
+  eval_steps: 500  # eval_strategy=steps 시 사용
+  save_strategy: "epoch"  # epoch, steps
+  save_steps: 500  # save_strategy=steps 시 사용
+  save_total_limit: 3  # 최대 체크포인트 저장 개수
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 3
+    threshold: 0.001  # 최소 개선량 (이 값 이상 개선되어야 patience 리셋)
+    metric: "eval_macro_f1"
+    mode: "max"
+  
+  # 재현성 설정
+  reproducibility:
+    deterministic: true  # cuDNN 결정적 동작
+    dataloader_seed: true  # DataLoader worker 시드 설정
+
+# 손실 함수 설정
+loss:
+  type: "soft_bce"  # bce, soft_bce, label_smoothing, focal, uncertainty
+  label_smoothing_alpha: 0.1  # label_smoothing 사용 시
+  focal_gamma: 2.0  # focal loss 사용 시
+  focal_alpha: 0.25  # focal loss 사용 시
+
+# 평가 설정
+evaluation:
+  threshold: 0.5  # 기본 threshold
+  optimize_threshold: true  # 기준별 최적 threshold 탐색
+  threshold_range: [0.3, 0.7]  # 탐색 범위
+  threshold_step: 0.05  # 탐색 단위
+
+# wandb 설정
+wandb:
+  entity: "dhj9842-hanyang-university"
+  project: "mutsa-v2"
+  enabled: true
+  log_interval: 100  # steps
+
+# 출력 설정
+output:
+  dir: "./outputs"
+  save_best_model: true
+  save_last_model: true
