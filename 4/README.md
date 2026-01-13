@@ -196,7 +196,7 @@ wandb:
 | 항목 | 기본값 | 설명 |
 |------|--------|------|
 | `model.name` | klue/roberta-base | 사전학습 모델 |
-| `tokenizer.max_length` | 128 | 최대 토큰 길이 |
+| `tokenizer.max_length` | 512 | 최대 토큰 길이 |
 | `training.batch_size` | 32 | 배치 크기 |
 | `training.learning_rate` | 2e-5 | 학습률 |
 | `training.num_epochs` | 5 | 에폭 수 |
