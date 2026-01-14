@@ -1,0 +1,343 @@
+# 5-Architecture Korean BERT Experiment Configuration
+# ================================================
+# 5가지 아키텍처 계열 모델 비교 실험
+# 2-GPU 병렬 실행 구성
+
+# 모델별 설정
+models:
+  bert:
+    id: "klue/bert-base"
+    name: "bert"
+    params: "111M"
+    learning_rate: 2.0e-5
+    batch_size: 64
+    batch_size_ctx: 32
+    feature: "Original bidirectional encoder"
+    
+  roberta:
+    id: "klue/roberta-base"
+    name: "roberta"
+    params: "111M"
+    learning_rate: 2.0e-5
+    batch_size: 64
+    batch_size_ctx: 32
+    feature: "Dynamic masking, no NSP"
+    
+  electra:
+    id: "monologg/koelectra-base-v3-discriminator"
+    name: "electra"
+    params: "110M"
+    learning_rate: 3.0e-5
+    batch_size: 64
+    batch_size_ctx: 32
+    feature: "Discriminator-based pretraining"
+    
+  distilbert:
+    id: "monologg/distilkobert"
+    name: "distilbert"
+    params: "28M"
+    learning_rate: 5.0e-5
+    batch_size: 128
+    batch_size_ctx: 64
+    feature: "Lightweight, fast inference"
+    
+  deberta:
+    id: "team-lucid/deberta-v3-base-korean"
+    name: "deberta"
+    params: "86M"
+    learning_rate: 1.0e-5
+    batch_size: 32
+    batch_size_ctx: 16
+    feature: "Disentangled attention, SOTA"
+
+# 공통 설정
+common:
+  num_epochs: 3
+  seed: 42
+  max_length: 128
+  max_length_ctx: 512
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  wandb_project: "mutsa-exp-v1"
+  wandb_entity: "dhj9842-hanyang-university"
+  early_stopping_patience: 3
+  early_stopping_threshold: 0.001
+
+# Loss 함수 설정
+losses:
+  bce:
+    type: "bce"
+    description: "Binary Cross Entropy"
+  soft_bce:
+    type: "soft_bce"
+    description: "Soft BCE with vote ratios"
+  focal:
+    type: "focal"
+    gamma: 2.0
+    alpha: 0.25
+    description: "Focal Loss for class imbalance"
+  asl:
+    type: "asl"
+    gamma_neg: 4
+    gamma_pos: 1
+    description: "Asymmetric Loss for extreme imbalance"
+  criterion_weighted:
+    type: "criterion_weighted"
+    description: "EDA-based criterion weights"
+
+# ================================================
+# Phase 1: 아키텍처 백본 비교 (10 실험)
+# ================================================
+phase1_architecture:
+  description: "5가지 아키텍처 계열 모델 비교 (맥락 유/무)"
+  experiments:
+    # Round 1: BERT
+    - name: "p1-bert-noctx"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "klue/bert-base"
+      loss_type: "bce"
+      learning_rate: 2.0e-5
+      batch_size: 64
+      use_context: false
+      
+    - name: "p1-bert-ctx"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "klue/bert-base"
+      loss_type: "bce"
+      learning_rate: 2.0e-5
+      batch_size: 32
+      use_context: true
+      
+    # Round 2: RoBERTa
+    - name: "p1-roberta-noctx"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "klue/roberta-base"
+      loss_type: "bce"
+      learning_rate: 2.0e-5
+      batch_size: 64
+      use_context: false
+      
+    - name: "p1-roberta-ctx"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "klue/roberta-base"
+      loss_type: "bce"
+      learning_rate: 2.0e-5
+      batch_size: 32
+      use_context: true
+      
+    # Round 3: ELECTRA
+    - name: "p1-electra-noctx"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "monologg/koelectra-base-v3-discriminator"
+      loss_type: "bce"
+      learning_rate: 3.0e-5
+      batch_size: 64
+      use_context: false
+      
+    - name: "p1-electra-ctx"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "monologg/koelectra-base-v3-discriminator"
+      loss_type: "bce"
+      learning_rate: 3.0e-5
+      batch_size: 32
+      use_context: true
+      
+    # Round 4: DistilBERT
+    - name: "p1-distilbert-noctx"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "monologg/distilkobert"
+      loss_type: "bce"
+      learning_rate: 5.0e-5
+      batch_size: 128
+      use_context: false
+      
+    - name: "p1-distilbert-ctx"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "monologg/distilkobert"
+      loss_type: "bce"
+      learning_rate: 5.0e-5
+      batch_size: 64
+      use_context: true
+      
+    # Round 5: DeBERTa
+    - name: "p1-deberta-noctx"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "team-lucid/deberta-v3-base-korean"
+      loss_type: "bce"
+      learning_rate: 1.0e-5
+      batch_size: 32
+      use_context: false
+      
+    - name: "p1-deberta-ctx"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "team-lucid/deberta-v3-base-korean"
+      loss_type: "bce"
+      learning_rate: 1.0e-5
+      batch_size: 16
+      use_context: true
+
+# ================================================
+# Phase 2: Loss 함수 비교 (10 실험)
+# Phase 1 완료 후 Top-2 모델로 진행
+# ================================================
+phase2_loss:
+  description: "Top-2 모델 × 5 Loss 함수 비교"
+  # 아래는 placeholder - Phase 1 결과에 따라 동적으로 결정됨
+  # run_all_experiments.sh에서 Phase 1 결과 분석 후 설정
+  top_models: 2
+  experiments:
+    # Top-1 모델 × 5 Loss (placeholder: roberta 가정)
+    - name: "p2-top1-bce"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${TOP1_MODEL}"
+      loss_type: "bce"
+      use_context: true
+      
+    - name: "p2-top1-softbce"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "${TOP1_MODEL}"
+      loss_type: "soft_bce"
+      use_context: true
+      
+    - name: "p2-top1-focal"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${TOP1_MODEL}"
+      loss_type: "focal"
+      use_context: true
+      
+    - name: "p2-top1-asl"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "${TOP1_MODEL}"
+      loss_type: "asl"
+      use_context: true
+      
+    - name: "p2-top1-weighted"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${TOP1_MODEL}"
+      loss_type: "criterion_weighted"
+      use_context: true
+      
+    # Top-2 모델 × 5 Loss
+    - name: "p2-top2-bce"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "${TOP2_MODEL}"
+      loss_type: "bce"
+      use_context: true
+      
+    - name: "p2-top2-softbce"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${TOP2_MODEL}"
+      loss_type: "soft_bce"
+      use_context: true
+      
+    - name: "p2-top2-focal"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "${TOP2_MODEL}"
+      loss_type: "focal"
+      use_context: true
+      
+    - name: "p2-top2-asl"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${TOP2_MODEL}"
+      loss_type: "asl"
+      use_context: true
+      
+    - name: "p2-top2-weighted"
+      gpu: 1
+      script: "scripts/train.py"
+      model: "${TOP2_MODEL}"
+      loss_type: "criterion_weighted"
+      use_context: true
+
+# ================================================
+# Phase 3: 고급 아키텍처 (3 실험)
+# ================================================
+phase3_architecture:
+  description: "Multi-Head, Cross-Encoder 아키텍처 비교"
+  experiments:
+    - name: "p3-multihead"
+      gpu: 0
+      script: "scripts/train_multihead.py"
+      model: "${BEST_MODEL}"
+      loss_type: "${BEST_LOSS}"
+      batch_size: 24
+      use_context: true
+      
+    - name: "p3-crossencoder"
+      gpu: 1
+      script: "scripts/train_crossencoder.py"
+      model: "${BEST_MODEL}"
+      loss_type: "${BEST_LOSS}"
+      batch_size: 16
+      use_context: true
+      
+    - name: "p3-standard-best"
+      gpu: 0
+      script: "scripts/train.py"
+      model: "${BEST_MODEL}"
+      loss_type: "${BEST_LOSS}"
+      use_context: true
+
+# ================================================
+# Phase 4: 학습 전략 (3 실험)
+# ================================================
+phase4_learning:
+  description: "Curriculum, Contrastive 학습 전략"
+  experiments:
+    - name: "p4-curriculum"
+      gpu: 0
+      script: "scripts/train_curriculum.py"
+      model: "${BEST_MODEL}"
+      loss_type: "${BEST_LOSS}"
+      strategy: "sqrt"
+      num_epochs: 5
+      batch_size: 32
+      use_context: true
+      
+    - name: "p4-contrastive"
+      gpu: 1
+      script: "scripts/train_contrastive.py"
+      model: "${BEST_MODEL}"
+      lambda_contrastive: 0.1
+      projection_dim: 256
+      batch_size: 32
+      use_context: true
+      
+    - name: "p4-combined"
+      gpu: 0
+      script: "scripts/train_curriculum.py"
+      model: "${BEST_MODEL}"
+      loss_type: "${BEST_LOSS}"
+      strategy: "sqrt"
+      num_epochs: 5
+      batch_size: 32
+      use_context: true
+      extra_args:
+        use_contrastive: true
+        lambda_contrastive: 0.1
+
+# 실행 순서
+execution_order:
+  - phase1_architecture
+  - phase2_loss
+  - phase3_architecture
+  - phase4_learning

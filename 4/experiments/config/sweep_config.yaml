@@ -1,0 +1,61 @@
+# wandb Sweep 설정
+# ================================================
+# 하이퍼파라미터 튜닝을 위한 Bayesian Optimization
+
+program: scripts/train.py
+method: bayes
+name: klue-roberta-base-sweep
+
+metric:
+  name: val/macro_f1
+  goal: maximize
+
+# 조기 종료
+early_terminate:
+  type: hyperband
+  min_iter: 3
+  eta: 2
+
+parameters:
+  # 학습률 (log uniform)
+  learning_rate:
+    distribution: log_uniform_values
+    min: 1.0e-5
+    max: 5.0e-5
+
+  # 배치 크기
+  batch_size:
+    values: [16, 32, 64]
+
+  # 최대 토큰 길이 (토큰 분포 분석 결과 기반: P90=95, P95=112, P99=149)
+  max_length:
+    values: [96, 128, 160]
+
+  # Warmup 비율
+  warmup_ratio:
+    values: [0.05, 0.1, 0.2]
+
+  # Weight decay
+  weight_decay:
+    values: [0.0, 0.01, 0.1]
+
+  # Epoch 수
+  num_epochs:
+    values: [3, 5, 7]
+
+  # 손실 함수 타입
+  loss_type:
+    values: ["bce", "soft_bce", "label_smoothing"]
+
+  # Label smoothing alpha (loss_type이 label_smoothing일 때만 사용)
+  label_smoothing_alpha:
+    values: [0.05, 0.1, 0.15]
+
+# 고정 파라미터
+command:
+  - ${env}
+  - python
+  - ${program}
+  - --config
+  - config/config.yaml
+  - ${args}

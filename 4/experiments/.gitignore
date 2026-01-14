@@ -1,0 +1,61 @@
+# ================================================
+# AI Quality Evaluation Experiments - .gitignore
+# ================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Experiment Results (대용량)
+outputs/
+logs/
+wandb/
+
+# Model Checkpoints
+*.pt
+*.pth
+*.bin
+*.safetensors
+checkpoint-*/
+best_model/
+
+# Data files (원본 데이터는 별도 관리)
+*.csv
+*.json
+!config/*.json
+!config/*.yaml
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Large files
+*.tar.gz
+*.zip
