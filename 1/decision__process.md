@@ -167,13 +167,14 @@ sample_response = "한국의 수도는 연필입니다. 연필은 지리적으�
 ==================================================
 예측 결과
 ==================================================
-✓ linguistic_acceptability: 99.86%
-✓ consistency: 99.37%
-✓ interestingness: 99.28%
-✓ unbias: 99.93%
-✓ harmlessness: 99.94%
-✓ no_hallucination: 96.64%
-✓ understandability: 99.64%
-✓ sensibleness: 99.80%
-✓ specificity: 99.55%
+✓ linguistic_acceptability: 98.43%
+✗ consistency: 34.05%
+✓ interestingness: 86.36%
+✓ unbias: 99.73%
+✓ harmlessness: 99.83%
+✗ no_hallucination: 3.75%
+✓ understandability: 98.19%
+✓ sensibleness: 91.66%
+✓ specificity: 91.49%
 ```
+-> 문맥상 전혀 어울리지 않는 단어가 나오는 경우, 90% 이상의 높은 정확도로 잡아내고 있음.
