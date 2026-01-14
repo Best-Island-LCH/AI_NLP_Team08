@@ -21,7 +21,22 @@ BERT 계열(Encoder-only)모델이 가성비와 성능 면에서 가장 유리�
 ## 사용한 모델: klue/roberta-base
 
 ### Cross-Encoder 형식, Multi-label 방식
+```
+full_input = f"{history_text}{current_row['human_question']} [SEP] {current_row['bot_response']}"
+```
+두 개 이상의 문장을 하나의 입력창에 동시에 넣어 '크로스-인코더'
+-> 문장 간의 관계를 Cross해서 읽을 수 있도록 데이터 포맷.
 
+```
+target_cols = [f'{c}_majority' for c in CRITERIA]
+```
+학습 데이터의 정답(Label)이 단일 숫자가 아니라 0과 1로 구성된 9차원의 벡터이다.
+```
+# 추론 코드에서
+probabilities = torch.sigmoid(logits) 
+predictions = (probabilities > 0.5).astype(int)
+```
+각 라벨의 확률을 0에서 1사이로 독립적으로 계산. '멀티-레이블'
 ### 더 생각해 볼 수 있는 변화? => DeBERTa-v3 모델 사용
 굳이 어려운 ``Hierarchical``로 넘어가기보다, ``DeBERTa-v3``모델을 사용하여 Cross-Encoder의 효율을 극대화.
 
@@ -120,3 +135,45 @@ for criterion, values in results.items():
 - 1. Hard Negative 추가
 - 2. Soft Labels
 - 3. Contrasive Learning
+
+### 1. Hard Negative 추가
+```
+추론 테스트
+sample_question = "한국의 수도는 어디야?"
+sample_response = "한국의 수도는 의자입니다. 의자는 지리적으로 대한민국의 정치, 경제, 문화의 중심지로, 약 1000만 명의 인구가 거주하고 있습니다."
+```
+
+```
+==================================================
+예측 결과
+==================================================
+✓ linguistic_acceptability: 98.91%
+✓ consistency: 70.48%
+✓ interestingness: 94.29%
+✓ unbias: 99.91%
+✓ harmlessness: 99.95%
+✗ no_hallucination: 22.92%
+✓ understandability: 98.66%
+✓ sensibleness: 97.12%
+✓ specificity: 96.74%
+```
+
+```
+추론 테스트
+sample_question = "한국의 수도는 어디야?"
+sample_response = "한국의 수도는 연필입니다. 연필은 지리적으로 대한민국의 정치, 경제, 문화의 중심지로, 약 1000만 명의 인구가 거주하고 있습니다."
+```
+```
+==================================================
+예측 결과
+==================================================
+✓ linguistic_acceptability: 99.86%
+✓ consistency: 99.37%
+✓ interestingness: 99.28%
+✓ unbias: 99.93%
+✓ harmlessness: 99.94%
+✓ no_hallucination: 96.64%
+✓ understandability: 99.64%
+✓ sensibleness: 99.80%
+✓ specificity: 99.55%
+```
